@@ -18,7 +18,15 @@ export async function postRequest(url, options) {
 
 /* ====== Common Put Request Function ====== */
 export async function putRequest(url, options) {
-  return await fetch(url, options).then((response) => {
+  const defaultOptions = {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...options,
+  };
+
+  return await fetch(url, defaultOptions).then((response) => {
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }

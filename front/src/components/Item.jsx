@@ -13,6 +13,7 @@ const Item = ({ task }) => {
   // console.log(task);
   const { _id, title, description, date, iscompleted, isimportant, userid } = task;
   // console.log({ title });
+
   const dispatch = useDispatch();
 
   const [isCompleted, setIsCompleted] = useState(iscompleted);
@@ -41,7 +42,7 @@ const Item = ({ task }) => {
   const changeCompleted = async () => {
     // setIsCompleted(!isCompleted)을 호출하면 상태 업데이트가 비동기적으로 이루어지기 때문에, isCompleted의 값이 즉시 변경되지 않는다.
     // 따라서 updateCompletedData 객체를 생성할 때 isCompleted의 이전 값이 사용된다. 이로 인해 true/false가 한 단계씩 밀리게 된다.
-    const newIsCompleted = !isCompleted;
+    const newIsCompleted = !iscompleted;
     setIsCompleted(newIsCompleted);
     // console.log(isCompleted);
     const updateCompletedData = {
@@ -66,21 +67,32 @@ const Item = ({ task }) => {
     dispatch(openModal({ modalType: 'update', task }));
   };
 
+  const handleDetail = () => {
+    dispatch(openModal({ modalType: 'detail', task }));
+  };
+
   return (
     <div className="item w-1/3 h-[25vh] p-[0.25rem]">
       <div className="w-full h-full border border-gray-500 rounded-md flex flex-col py-3 px-4 justify-between bg-gray-950">
         <div className="upper">
-          <h2 className="text-xl font-normal mb-3 relative pb-2">
+          <h2 className="text-xl font-normal mb-3 relative pb-2 flex justify-between">
             <span className="w-full h-[1px] bg-gray-500 absolute bottom-0"></span>
             {title}
+            <span
+              className="text-sm py-1 px-3 border border-gray-500 rounded-dm hover:bg-gray-700 cursor-pointer"
+              onClick={handleDetail}
+            >
+              자세히
+            </span>
           </h2>
+
           <p style={{ whiteSpace: 'pre-wrap' }}>{description}</p>
         </div>
         <div className="lower">
           <p className="text-sm mb-1">{date}</p>
           <div className="item-footer flex justify-between">
             <div className="item-footer-left flex gap-x-2">
-              {isCompleted ? (
+              {iscompleted ? (
                 <button
                   className="block py-1 px-4 bg-green-400 text-sm text-white rounded-md"
                   onClick={changeCompleted}
@@ -92,8 +104,11 @@ const Item = ({ task }) => {
                   InCompleted
                 </button>
               )}
-
-              <button className="block py-1 px-4 bg-red-400 text-sm text-white rounded-md">Important</button>
+              {isimportant ? (
+                <button className="block py-1 px-4 bg-red-400 text-sm text-white rounded-md">Important</button>
+              ) : (
+                ''
+              )}
             </div>
             <div className="item-footer-right flex gap-x-3 items-center">
               <button>

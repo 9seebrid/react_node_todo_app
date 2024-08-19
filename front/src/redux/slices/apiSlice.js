@@ -41,7 +41,7 @@ const deleteItemFetchThunk = (actionType, apiURL) => {
 
 const updateItemFetchThunk = (actionType, apiURL) => {
   return createAsyncThunk(actionType, async (updateData) => {
-    console.log(updateData);
+    // console.log(updateData);
     const options = {
       body: JSON.stringify(updateData), // 표준 json 문자열로 변환
     };
