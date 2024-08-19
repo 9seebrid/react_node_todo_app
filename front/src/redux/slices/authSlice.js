@@ -1,47 +1,27 @@
-import { createSlice } from '@reduxjs/toolkit'; // 1. slice 생성
+import { createSlice } from '@reduxjs/toolkit'; // slice 생성
 
 const initialState = {
-  // 2. 초기 상태 정의
-  userName: localStorage.getItem('userName') || null,
-  userImage: localStorage.getItem('userImage') || null,
-  userToken: localStorage.getItem('userToken') || null,
-  userEmail: localStorage.getItem('userEmail') || null,
+  authData: JSON.parse(localStorage.getItem('authData')) || null, // 초기 상태 설정
 };
 
-export const authSlice = createSlice({
-  // 3. slice 생성
-  name: 'auth', // 4. slice 이름 정의
+const authSlice = createSlice({
+  name: 'auth',
   initialState,
   reducers: {
     login: (state, action) => {
-      // 5. reducer 정의
-      state.userName = action.payload.userName; // action.payload로 전달된 값으로 상태 변경
-      state.userImage = action.payload.userImage; // action.payload로 전달된 값으로 상태 변경
-      state.userToken = action.payload.userToken; // action.payload로 전달된 값으로 상태 변경
-      state.userEmail = action.payload.userEmail; // action.payload로 전달된 값으로 상태 변경
-      localStorage.setItem('userName', action.payload.userName);
-      localStorage.setItem('userImage', action.payload.userImage);
-      localStorage.setItem('userToken', action.payload.userToken);
-      localStorage.setItem('userEmail', action.payload.userEmail);
+      // update 상태값 변경
+      state.authData = action.payload.authData;
+
+      localStorage.setItem('authData', JSON.stringify(action.payload.authData));
     },
     logout: (state) => {
-      // 6. reducer 정의
-      state.userName = null;
-      state.userImage = null;
-      state.userToken = null;
-      state.userEmail = null;
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userImage');
-      localStorage.removeItem('userToken');
-      localStorage.removeItem('userEmail');
+      // 상태값 비움
+      state.authData = null;
+
+      localStorage.removeItem('authData');
     },
   },
-});
+}); // slice 생성
 
-// const a= {abc:1, def:2};
-// console.log(a);
-// const {abc,def}=a; 구조분해 할당
-
-// export const authActions = authSlice.actions;
-export const { login, logout } = authSlice.actions;
-export default authSlice.reducer; // 7. export 된 함수들을 store에 등록
+export const { login, logout } = authSlice.actions; // action 생성
+export default authSlice.reducer; // export 된 함수들을 store에 등록

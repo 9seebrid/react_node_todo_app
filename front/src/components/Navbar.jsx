@@ -1,98 +1,110 @@
-import React, { useEffect, useState } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
+import React, { useCallback, useEffect, useState } from 'react';
+
 import { jwtDecode } from 'jwt-decode';
+
 import { useDispatch, useSelector } from 'react-redux';
 import { login, logout } from '../redux/slices/authSlice';
 
-const Navbar = () => {
-  const dispatch = useDispatch();
-  const userInfo = useSelector((state) => state.auth); // useSelector로 state.auth를 가져옴, auth: store.js에서 등록한 reducer 객체요소의 키
+import { navMenus } from '../utils/data';
+import { Link } from 'react-router-dom';
+import { FcGoogle } from 'react-icons/fc';
 
-  const [isAuth, setIsAuth] = useState(!userInfo); // userInfo가 없는 상태 초기화
+const Navbar = ({ menuIdx }) => {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.authData);
+  const { name } = user || {};
+
+  const gooleClientId = process.env.REACT_APP_AUTH_CLIENT_ID;
+  const [isAuthentication, setIsAuthentication] = useState(false);
+
+  const handleLoginSuccess = useCallback(
+    (response) => {
+      const decoded = jwtDecode(response.credential); // 구글에서 받아온 값 json으로 디코딩
+
+      dispatch(login({ authData: decoded }));
+      setIsAuthentication(true);
+    },
+    [dispatch]
+  );
 
   useEffect(() => {
-    const storedName = localStorage.getItem('userName');
-    const storedImage = localStorage.getItem('userImage');
-    const storedToken = localStorage.getItem('userToken');
-    const storedEmail = localStorage.getItem('userEmail');
+    const storedData = JSON.parse(localStorage.getItem('authData'));
 
-    if (storedToken) {
-      dispatch(
-        login({
-          userName: storedName,
-          userImage: storedImage,
-          userToken: storedToken,
-          userEmail: storedEmail,
-        })
-      );
-      setIsAuth(true);
+    if (storedData) {
+      dispatch(login({ authData: storedData }));
+      setIsAuthentication(true);
     }
   }, [dispatch]);
 
-  const handleLoginSuccess = (credentialResponse) => {
-    const userData = jwtDecode(credentialResponse.credential);
-    // console.log(userData);
-    // userData.jti
+  useEffect(() => {
+    if (window.google) {
+      // 구글 아이디가 가져와 졌을 때
+      window.google.accounts.id.initialize({
+        // 구글 값 초기화
+        client_id: gooleClientId,
+        callback: handleLoginSuccess,
+        use_fedcm_for_prompt: false,
+      });
+    }
+  }, [gooleClientId, handleLoginSuccess]);
 
-    dispatch(
-      login({
-        userName: userData.given_name,
-        userImage: userData.picture,
-        userToken: credentialResponse.credential,
-        userEmail: userData.email,
-      })
-    );
-    setIsAuth(true);
+  const handleLoginClick = () => {
+    window.google.accounts.id.prompt(); // 로그인 팝업 띄우기
   };
 
-  if (window.google) {
-    window.google.accounts.id.initialize({
-      client_id: process.env.REACT_APP_AUTH_CLIENT_ID,
-      callback: handleLoginSuccess,
-    });
-  }
-
-  const handleLogin = () => {
-    window.google.accounts.id.prompt();
-  };
-
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
     dispatch(logout());
-    setIsAuth(false);
+    setIsAuthentication(false);
   };
 
-  localStorage.removeItem('token');
   return (
-    <div className="navi">
-      {/* <GoogleLogin
-        onSuccess={handleLoginSuccess}
-        onError={() => {
-          console.log('Login Failed');
-        }}
-      /> */}
+    <nav className="navi bg-[#212121] w-1/5 h-full rounded-md border border-gray-500 py-10 px-4 flex flex-col justify-between items-center text-center">
+      <div className="logo-wrapper flex w-full items-center justify-center gap-6">
+        <div className="logo"></div>
+        <h2 className="font-semibold">
+          <Link to="/" className="font-customFontEN">
+            9SEEBIRD
+          </Link>
+        </h2>
+      </div>
+      <ul className="menus">
+        {navMenus.map((menu, idx) => (
+          <li
+            key={idx}
+            className={`${
+              menu.idx === menuIdx ? 'bg-gray-900' : ''
+            } border border-gray-600 rounded-sm mb-1 hover:bg-gray-900 transition-all duration-200 w-full`}
+          >
+            <Link to={menu.to} className="flex justify-stretch items-center gap-4 py-2 px-10 rounded-sm">
+              {menu.icon} {menu.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
 
-      {userInfo.userToken ? (
-        <div>
-          <h2>{userInfo.userName}님 로그인</h2>
-          <button onClick={handleLogout}>LOGOUT</button>
+      {isAuthentication ? (
+        <div className="w-4/5">
+          <button
+            onClick={handleLogoutClick}
+            className="font-customFontKR flex justify-center items-center gap-2 bg-gray-300 text-gray-900 py-2 px-4 rounded-md w-full"
+          >
+            <FcGoogle className="h-5 w-5" />
+            <span className="text-sm">{name}님 Logout</span>
+          </button>
         </div>
       ) : (
-        <div>
-          <h2>로그인이 필요합니다.</h2>
-          <button onClick={handleLogin}>LOGIN</button>
+        <div className="w-4/5">
+          <button
+            onClick={handleLoginClick}
+            className="font-customFontKR flex justify-center items-center gap-2 bg-gray-300 text-gray-900 py-2 px-4 rounded-md w-full"
+          >
+            <FcGoogle className="h-5 w-5" />
+            Login With Google
+          </button>
         </div>
       )}
-    </div>
+    </nav>
   );
 };
 
 export default Navbar;
-
-//   (credentialResponse) => {
-//   const userInfo = jwtDecode(credentialResponse.credential);
-//   // console.log(credentialResponse);
-//   console.log(userInfo.jti);
-//   console.log(userInfo.email);
-//   console.log(userInfo.given_name);
-//   console.log(userInfo.picture);
-// }
